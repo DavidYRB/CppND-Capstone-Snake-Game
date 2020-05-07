@@ -2,19 +2,26 @@
 #include <cmath>
 #include <iostream>
 
-void Snake::Update() {
-  SDL_Point prev_cell{
-      static_cast<int>(head_x),
-      static_cast<int>(
-          head_y)};  // We first capture the head's cell before updating.
+Snake::Snake(int grid_width, int grid_height, float speed=0.1f, int initial_size = 1)
+      : grid_width(grid_width),
+        grid_height(grid_height), 
+        speed(speed),
+        size(initial_size)
+{
+  head_x = grid_width/2;
+  head_y = grid_height/2;
+  head_grid = std::make_shared<head>(static_cast<int>(head_x), static_cast<int>(head_y));
+  body = std::make_shared<std::queue<SDL_Point>>();
+  occupied_points = std::make_shared<std::unordered_set<SDL_Point>>();
+}
+
+void Snake::UpdatePose() {
+  SDL_Point prev_cell{head_grid->x, head_grid->y};  // We first capture the head's cell before updating.
   UpdateHead();
-  SDL_Point current_cell{
-      static_cast<int>(head_x),
-      static_cast<int>(head_y)};  // Capture the head's cell after updating.
 
   // Update all of the body vector items if the snake head has moved to a new
   // cell.
-  if (current_cell.x != prev_cell.x || current_cell.y != prev_cell.y) {
+  if (head_grid->x != prev_cell.x || head_grid->y != prev_cell.y) {
     UpdateBody(current_cell, prev_cell);
   }
 }
@@ -41,39 +48,69 @@ void Snake::UpdateHead() {
   // Wrap the Snake around to the beginning if going off of the screen.
   head_x = fmod(head_x + grid_width, grid_width);
   head_y = fmod(head_y + grid_height, grid_height);
+  head_grid->x = static_cast<int>(head_x);
+  head_grid->y = static_cast<int>(head_y);
 }
 
-void Snake::UpdateBody(SDL_Point &current_head_cell, SDL_Point &prev_head_cell) {
+void Snake::UpdateBody(const SDL_Point &prev_head_cell) {
   // Add previous head location to vector
-  body.push_back(prev_head_cell);
+  body->push(prev_head_cell);
+  occupied_points->insert(prev_head_cell);
 
   if (!growing) {
-    // Remove the tail from the vector.
-    body.erase(body.begin());
+    // Remove the tail from the body queue.
+    auto it = occupied_points->find(body->front());
+    occupied_points->erase(it);
+    body->pop();
   } else {
     growing = false;
-    size++;
+    ++size;
   }
 
   // Check if the snake has died.
-  for (auto const &item : body) {
-    if (current_head_cell.x == item.x && current_head_cell.y == item.y) {
-      alive = false;
-    }
+  if(occupied_points->find(*head_grid) != occupied_points->end()){
+    alive = false;
   }
 }
 
-void Snake::GrowBody() { growing = true; }
+void Snake::GrowBody() { 
+  growing = true;
+  speed += 0.02;
+}
 
 // Inefficient method to check if cell is occupied by snake.
 bool Snake::SnakeCell(int x, int y) {
-  if (x == static_cast<int>(head_x) && y == static_cast<int>(head_y)) {
+  SDL_Point check_point{x, y};
+  if(occupied_points->find(check_point) != occupied_points->end()){
     return true;
   }
-  for (auto const &item : body) {
-    if (x == item.x && y == item.y) {
-      return true;
-    }
+  else if(x == head_grid->x && y == head_grid->y) {
+    return true;
   }
   return false;
+}
+
+// get the head of the snake
+std::shared_ptr<SDL_Point> Snake::GetHead(){
+  return head_grid;
+}
+
+std::shared_ptr<std::unordered_set<SDL_Point>> Snake::GetBody(){
+  return body;
+}
+
+bool Snake::isAlive(){
+  return alive;
+}
+
+Snake::Direction Snake::GetDirection(){
+  return direction;
+}
+
+void Snake::SetDirection(Direction dir){
+  direction = dir;
+}
+
+int Snake::GetSize(){
+  return size;
 }
