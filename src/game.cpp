@@ -66,20 +66,17 @@ void Game::PlaceFood() {
 }
 
 void Game::Update() {
-  if (!snake.alive) return;
+  if (!snake.isAlive()) return;
 
-  snake.Update();
-
-  int new_x = static_cast<int>(snake.head_x);
-  int new_y = static_cast<int>(snake.head_y);
+  snake.UpdatePose();
+  std::shared_ptr<SDL_Point> head = snake.GetHead();
 
   // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
-    score++;
+  if (food.x == head->y && food.y == head->y) {
+    ++score;
     PlaceFood();
     // Grow snake and increase speed.
     snake.GrowBody();
-    snake.speed += 0.02;
   }
 }
 

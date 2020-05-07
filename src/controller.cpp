@@ -5,7 +5,10 @@
 
 void Controller::ChangeDirection(Snake &snake, Snake::Direction input,
                                  Snake::Direction opposite) const {
-  if (snake.direction != opposite || snake.size == 1) snake.direction = input;
+  Snake::Direction dir = snake.GetDirection();
+  if (dir != opposite || snake.GetSize() == 1){
+    snake.SetDirection(dir);
+  }
   return;
 }
 
