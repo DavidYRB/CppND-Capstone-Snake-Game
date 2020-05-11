@@ -2,7 +2,7 @@
 #include <cmath>
 #include <iostream>
 
-Snake::Snake(int grid_width, int grid_height, float speed=0.1f, int initial_size = 1)
+Snake::Snake(int grid_width, int grid_height, float speed, int initial_size)
       : grid_width(grid_width),
         grid_height(grid_height), 
         speed(speed),
@@ -10,9 +10,11 @@ Snake::Snake(int grid_width, int grid_height, float speed=0.1f, int initial_size
 {
   head_x = grid_width/2;
   head_y = grid_height/2;
-  head_grid = std::make_shared<head>(static_cast<int>(head_x), static_cast<int>(head_y));
+  head_grid = std::make_shared<SDL_Point>();
+  head_grid->x = static_cast<int>(head_x);
+  head_grid->y = static_cast<int>(head_y);
   body = std::make_shared<std::queue<SDL_Point>>();
-  occupied_points = std::make_shared<std::unordered_set<SDL_Point>>();
+  occupied_points = std::make_shared<std::unordered_set<SDL_Point, SDLPointHash, SDLPointEqual>>();
 }
 
 void Snake::UpdatePose() {
@@ -22,7 +24,7 @@ void Snake::UpdatePose() {
   // Update all of the body vector items if the snake head has moved to a new
   // cell.
   if (head_grid->x != prev_cell.x || head_grid->y != prev_cell.y) {
-    UpdateBody(current_cell, prev_cell);
+    UpdateBody(prev_cell);
   }
 }
 
@@ -91,19 +93,19 @@ bool Snake::SnakeCell(int x, int y) {
 }
 
 // get the head of the snake
-std::shared_ptr<SDL_Point> Snake::GetHead(){
+std::shared_ptr<SDL_Point> Snake::GetHead() const{
   return head_grid;
 }
 
-std::shared_ptr<std::unordered_set<SDL_Point>> Snake::GetBody(){
-  return body;
+std::shared_ptr<std::unordered_set<SDL_Point, SDLPointHash, SDLPointEqual>> Snake::GetBody() const{
+  return occupied_points;
 }
 
-bool Snake::isAlive(){
+bool Snake::isAlive() const{
   return alive;
 }
 
-Snake::Direction Snake::GetDirection(){
+Snake::Direction Snake::GetDirection() const{
   return direction;
 }
 
@@ -111,6 +113,6 @@ void Snake::SetDirection(Direction dir){
   direction = dir;
 }
 
-int Snake::GetSize(){
+int Snake::GetSize() const{
   return size;
 }

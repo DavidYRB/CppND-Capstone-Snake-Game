@@ -38,7 +38,7 @@ Renderer::~Renderer() {
   SDL_Quit();
 }
 
-void Renderer::Render(Snake const &snake, SDL_Point const &food) {
+void Renderer::Render(Snake &snake, SDL_Point const &food) {
   SDL_Rect block;
   block.w = screen_width / grid_width;
   block.h = screen_height / grid_height;
@@ -55,10 +55,11 @@ void Renderer::Render(Snake const &snake, SDL_Point const &food) {
 
   // Render snake's body
   SDL_SetRenderDrawColor(sdl_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  std::shared_ptr<std::unordered_set<SDL_Point>> body = snake.GetBody();
-  for (auto it : *body) {
-    block.x = it->x * block.w;
-    block.y = it->y * block.h;
+  const std::shared_ptr<std::unordered_set<SDL_Point, SDLPointHash, SDLPointEqual>> body = snake.GetBody();
+  const std::unordered_set<SDL_Point, SDLPointHash, SDLPointEqual> &list = *body;
+  for (auto it : list) {
+    block.x = it.x * block.w;
+    block.y = it.y * block.h;
     SDL_RenderFillRect(sdl_renderer, &block);
   }
 
